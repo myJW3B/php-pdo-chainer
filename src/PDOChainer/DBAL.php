@@ -80,7 +80,7 @@ class DBAL
      * 
      * @return int Affected rows count
      */
-    public function update($table, array $dataArr, array $whereArr = array(), $limit = 1){
+    public function update($table, array $dataArr, array $whereArr = [], $limit = 1){
         $fields = $params = $values = $where = [];
         foreach($dataArr as $data){
             $fields[] = "`{$data[0]}` = :{$data[0]}";
@@ -154,7 +154,7 @@ class DBAL
                     $fields[] = "`{$rowData[0]}`";
                 }
                 $placeholders[] = ":{$rowData[0]}{$i}";
-                $values[] = array(":{$rowData[0]}{$i}", $rowData[1], (isset($rowData[2]) ? $rowData[2] : \PDO::PARAM_STR));
+                $values[] = [":{$rowData[0]}{$i}", $rowData[1], (isset($rowData[2]) ? $rowData[2] : \PDO::PARAM_STR)];
             }
             $params[] = '(' . implode(',', $placeholders) . ')';
         }
@@ -182,19 +182,19 @@ class DBAL
      * @return Array containing all rows retrieved from the database
      */
 
-		public function select($sql, $limit = 1, $binds = []){
-			$get = $this->pdo->prepare($sql);
-			if($binds != ''){
-				$get = $get->bindValues($binds);
-			}
-			$get = $get->execute();
-			if($limit > 0){
-				if($limit > 1){
-					$get = $get->fetchAll();
-				} else {
-					$get = $get->fetch();
-				}
-			}
-			return $get;
-		}
+    public function select($sql, $limit = 1, $binds = []){
+        $get = $this->pdo->prepare($sql);
+        if($binds != ''){
+            $get = $get->bindValues($binds);
+        }
+        $get = $get->execute();
+        if($limit > 0){
+            if($limit > 1){
+                $get = $get->fetchAll();
+            } else {
+                $get = $get->fetch();
+            }
+        }
+        return $get;
+    }
 }
