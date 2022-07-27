@@ -7,6 +7,7 @@
  * See lincense text in LICENSE file.
  * 
  * (c) Evgeniy Udodov <flr.null@gmail.com>
+ * (c) John Brittain <jb@jw3b.com>
  */
 
 namespace PDOChainer;
@@ -38,19 +39,19 @@ class DBAL
      * 
      * @param String $table
      * @param Array $data
-     * Array (
-     *   array('id', 2, \PDO::PARAM_INT),
-     *   array('name', 'James', \PDO::PARAM_STR),
-     * )
+     * [
+     *   ['id', 2, \PDO::PARAM_INT],
+     *   ['name', 'James', \PDO::PARAM_STR],
+     * ]
      * 
      * @return int|false Inserted ID or false
      */
-    function insert($table, array $dataArr){
-        $fields = $params = $values = array();
+    public function insert($table, array $dataArr){
+        $fields = $params = $values = [];
         foreach ($dataArr as $data) {
             $fields[] = "`{$data[0]}`";
             $params[] = ":{$data[0]}";
-            $values[] = array(":{$data[0]}", $data[1], (isset($data[2]) ? $data[2] : \PDO::PARAM_STR));
+            $values[] = [":{$data[0]}", $data[1], (isset($data[2]) ? $data[2] : \PDO::PARAM_STR)];
         }
 
         $fields = implode(',', $fields);
@@ -66,30 +67,30 @@ class DBAL
      * 
      * @param String $table
      * @param Array $dataArr
-     * Array (
-     *   array('id', 2, \PDO::PARAM_INT),
-     *   array('name', 'James', \PDO::PARAM_STR),
-     *   ...
-     * )
+     * [
+     *   ['id', 2, \PDO::PARAM_INT],
+     *   ['name', 'James', \PDO::PARAM_STR],
+		 *    ...
+     * ]
      * @param Array $whereArr
-     * Array (
-     *   array('id', 2, \PDO::PARAM_INT),
-     * )
+     * [
+     *   ['id', 2, \PDO::PARAM_INT],
+     * ]
      * @param int $limit
      * 
      * @return int Affected rows count
      */
-    function update($table, array $dataArr, array $whereArr = array(), $limit = 1){
-        $fields = $params = $values = $where = array();
+    public function update($table, array $dataArr, array $whereArr = array(), $limit = 1){
+        $fields = $params = $values = $where = [];
         foreach($dataArr as $data){
             $fields[] = "`{$data[0]}` = :{$data[0]}";
-            $values[] = array(":{$data[0]}", $data[1], (isset($data[2]) ? $data[2] : \PDO::PARAM_STR));
+            $values[] = [":{$data[0]}", $data[1], (isset($data[2]) ? $data[2] : \PDO::PARAM_STR)];
         }
         $i = 0;
         foreach($whereArr as $wData){
             $i++; // The $i is in there because row wouldnt update with :value already being set above
             $where[] = "`{$wData[0]}` = :{$wData[0]}{$i}";
-            $values[] = array(":{$wData[0]}{$i}", $wData[1], (isset($wData[2]) ? $wData[2] : \PDO::PARAM_STR));
+            $values[] = [":{$wData[0]}{$i}", $wData[1], (isset($wData[2]) ? $wData[2] : \PDO::PARAM_STR)];
         }
 
         $fields = implode(',', $fields);
@@ -105,19 +106,19 @@ class DBAL
      * 
      * @param String $table
      * @param Array $dataArr
-     * Array (
-     *   array('id', 2, \PDO::PARAM_INT),
-     *   array('name', 'James', \PDO::PARAM_STR),
-     *   ...
-     * )
+     * [
+     *   ['id', 2, \PDO::PARAM_INT],
+     *   ['name', 'James', \PDO::PARAM_STR],
+		 *    ...
+     * ]
      * @param int $limit
      * 
      * @return int Affected rows count
      */
-    function delete($table, array $dataArr, $limit = 1){
+    public function delete($table, array $dataArr, $limit = 1){
         foreach($dataArr as $data){
             $fields[] = "`{$data[0]}` = :{$data[0]}";
-            $values[] = array(":{$data[0]}", $data[1], (isset($data[2]) ? $data[2] : \PDO::PARAM_STR));
+            $values[] = [":{$data[0]}", $data[1], (isset($data[2]) ? $data[2] : \PDO::PARAM_STR)];
         }
 
         $fields = implode(' AND ', $fields);
@@ -132,17 +133,17 @@ class DBAL
      * 
      * @param String $table
      * @param Array $dataArr
-     * Array (
-     *   array (
-     *     array('id', 2, \PDO::PARAM_INT),
-     *     array('name', 'James', \PDO::PARAM_STR),
-     *   ),
+     * [
+     *   [
+     *     ['id', 2, \PDO::PARAM_INT],
+     *     ['name', 'James', \PDO::PARAM_STR],
+     *   ],
      *   ...
-     * )
+     * ]
      * 
      * @return int|false Last inserted ID or false
      */
-    function insertMulti($table, array $dataArr){
+    public function insertMulti($table, array $dataArr){
         $i = 0;
         $fields = array();
         foreach($dataArr as $data){
@@ -165,4 +166,35 @@ class DBAL
         $this->pdo->prepare($sql)->bindValues($values)->execute();
         return $this->pdo->lastInsertId();
     }
+
+		/**
+     * Select data from the DataBase.
+     * 
+     * @param String $sql 	Full sql statement
+     * @param Int $limit		if returning multi rows, put a number grater than 1 	
+     * @param Array $binds
+     * [
+     *   ['id', 2, \PDO::PARAM_INT],
+     *   ['name', 'James', \PDO::PARAM_STR],
+     *   ...
+     * ]
+     * 
+     * @return Array containing all rows retrieved from the database
+     */
+
+		public function select($sql, $limit = 1, $binds = []){
+			$get = $this->pdo->prepare($sql);
+			if($binds != ''){
+				$get = $get->bindValues($binds);
+			}
+			$get = $get->execute();
+			if($limit > 0){
+				if($limit > 1){
+					$get = $get->fetchAll();
+				} else {
+					$get = $get->fetch();
+				}
+			}
+			return $get;
+		}
 }
