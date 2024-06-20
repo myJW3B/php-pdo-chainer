@@ -2,10 +2,10 @@
 
 /**
  * PDO chain wrapper.
- * 
+ *
  * See usage examples in README file.
  * See lincense text in LICENSE file.
- * 
+ *
  * (c) Evgeniy Udodov <flr.null@gmail.com>
  */
 
@@ -23,7 +23,7 @@ class PDOChainer
     private $pass = '';
     private $errorMode = \PDO::ERRMODE_WARNING;
     private $charset = 'utf8';
-    
+
     private $pdo; // Db handler
     private $pdoStatement; // Statement object
 
@@ -54,43 +54,43 @@ class PDOChainer
         }
         $this->pdo = $db;
     }
-    
+
     /**
      * PDO prepare.
-     * 
-     * @param String $query
-     * 
+     *
+     * @param string $query
+     *
      * @return \PDOChainer\PDOChainer
      */
     public function prepare($query) {
         $this->pdoStatement = $this->pdo->prepare($query);
         return $this;
     }
-    
+
     /**
      * PDO bindValue.
-     * 
-     * @param String $name
-     * @param String  $value
+     *
+     * @param string $name
+     * @param string  $value
      * @param int $type
-     * 
-     * @return \PDOChainer\PDOChainer 
+     *
+     * @return \PDOChainer\PDOChainer
      */
     public function bindValue($name, $value, $type = \PDO::PARAM_STR) {
         $this->pdoStatement->bindValue($name, $value, $type);
         return $this;
     }
-    
+
     /**
      * PDO bindValues for array of values.
-     * 
-     * @param Array $binds
+     *
+     * @param array $binds
      * Array (
      *   array(':id', 2, \PDO::PARAM_INT),
      *   array(':name', 'James', \PDO::PARAM_STR),
      *   ...
      * )
-     * 
+     *
      * @return \PDOChainer\PDOChainer
      */
     public function bindValues(array $binds) {
@@ -99,10 +99,10 @@ class PDOChainer
         }
         return $this;
     }
-    
+
     /**
      * PDO execute.
-     * 
+     *
      * @return \PDOChainer\PDOChainer
      */
     public function execute() {
@@ -113,35 +113,35 @@ class PDOChainer
         }
         return $this;
     }
-    
+
     /**
      * PDO fetch.
-     * 
+     *
      * @param int $type
-     * 
-     * @return Array|false
+     *
+     * @return array|false
      */
     public function fetch($type = \PDO::FETCH_BOTH) {
         return ($this->pdoStatement) ? $this->pdoStatement->fetch($type) : false;
     }
-    
+
     /**
      * PDO fetchAll.
-     * 
-     * @param int $type 
-     * 
-     * @return Array|false
+     *
+     * @param int $type
+     *
+     * @return array|false
      */
     public function fetchAll($type = \PDO::FETCH_BOTH) {
         return ($this->pdoStatement) ? $this->pdoStatement->fetchAll($type) : false;
     }
-    
+
     /**
      * PDO query.
-     * 
-     * @param String $query
-     * 
-     * @return \PDOChainer\PDOChainer 
+     *
+     * @param string $query
+     *
+     * @return \PDOChainer\PDOChainer
      */
     public function query($query) {
         try {
@@ -149,21 +149,21 @@ class PDOChainer
         } catch (\PDOException $e) {
             trigger_error('DataBase error: ' . $e->getMessage(), E_USER_ERROR);
         }
-        return $this; 
+        return $this;
     }
-    
+
     /**
      * PDO lastInsertId.
-     * 
-     * @return String Last inserted ID
+     *
+     * @return string Last inserted ID
      */
     public function lastInsertId() {
         return $this->pdo->lastInsertId();
     }
-    
+
     /**
      * PDO rowCount.
-     * 
+     *
      * @return int|false
      */
     public function rowCount() {

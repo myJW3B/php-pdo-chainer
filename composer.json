@@ -1,5 +1,5 @@
 {
-    "name": "flrnull/php-pdo-chainer",
+    "name": "myjw3b/php-pdo-chainer",
     "type": "library",
     "description": "PHP PDO wrapper",
     "keywords": ["php", "pdo", "wrapper", "chainer"],
@@ -8,6 +8,12 @@
         {
             "name": "flrnull",
             "email": "flr.null@gmail.com"
+        },
+        {
+            "name": "John Brittain III",
+			"email": "Yohn@coming-soon.com",
+			"homepage": "https://github.com/Yohn",
+			"role": "Developer"
         }
     ],
     "require": {
