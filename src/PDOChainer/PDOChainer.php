@@ -155,7 +155,7 @@ class PDOChainer
     /**
      * PDO lastInsertId.
      *
-     * @return string Last inserted ID
+     * @return int|false Last inserted ID
      */
     public function lastInsertId() {
         return $this->pdo->lastInsertId();

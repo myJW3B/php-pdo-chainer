@@ -59,7 +59,7 @@ class DBAL
 
         $sql = "INSERT INTO `{$table}` ({$fields}) VALUES ({$params})";
         $this->pdo->prepare($sql)->bindValues($values)->execute();
-        return (bool) $this->pdo->lastInsertId();
+        return (int) $this->pdo->lastInsertId();
     }
 
     /**
