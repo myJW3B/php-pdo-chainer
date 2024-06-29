@@ -121,7 +121,7 @@ class PDOChainer
      *
      * @return array|false
      */
-    public function fetch($type = \PDO::FETCH_BOTH) {
+    public function fetch($type = \PDO::FETCH_ASSOC) {
         return ($this->pdoStatement) ? $this->pdoStatement->fetch($type) : false;
     }
 
@@ -132,7 +132,7 @@ class PDOChainer
      *
      * @return array|false
      */
-    public function fetchAll($type = \PDO::FETCH_BOTH) {
+    public function fetchAll($type = \PDO::FETCH_ASSOC) {
         return ($this->pdoStatement) ? $this->pdoStatement->fetchAll($type) : false;
     }
 
