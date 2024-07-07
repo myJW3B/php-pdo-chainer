@@ -30,7 +30,7 @@ class PDOChainer
     /**
      * Main constructor.
      *
-     * @param array $options
+     * @param array $options = ['host' => $host, 'port' => 3306, 'dbname' => 'db table', 'user' => 'username', 'pass' => 'secrec password']
      */
     public function __construct(array $options = array()) {
         $host = isset($options['host']) ? $options['host'] : $this->host;
