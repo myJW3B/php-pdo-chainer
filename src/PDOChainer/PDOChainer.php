@@ -3,10 +3,11 @@
 /**
  * PDO chain wrapper.
  *
- * See usage examples in README file.
- * See lincense text in LICENSE file.
+ * See usage examples in the README file.
+ * See license text in the LICENSE file.
  *
  * (c) Evgeniy Udodov <flr.null@gmail.com>
+ * (c) John Brittain <jb@jw3b.com>
  */
 
 namespace PDOChainer;
@@ -16,157 +17,201 @@ namespace PDOChainer;
  */
 class PDOChainer
 {
-    private $host = '127.0.0.1';
-    private $port = 3306;
-    private $dbname = null;
-    private $user = 'root';
-    private $pass = '';
-    private $errorMode = \PDO::ERRMODE_WARNING;
-    private $charset = 'utf8';
+	/**
+	 * @var string $host The database host.
+	 */
+	private string $host = '127.0.0.1';
 
-    private $pdo; // Db handler
-    private $pdoStatement; // Statement object
+	/**
+	 * @var int $port The database port.
+	 */
+	private int $port = 3306;
 
-    /**
-     * Main constructor.
-     *
-     * @param array $options = ['host' => $host, 'port' => 3306, 'dbname' => 'db table', 'user' => 'username', 'pass' => 'secrec password']
-     */
-    public function __construct(array $options = array()) {
-        $host = isset($options['host']) ? $options['host'] : $this->host;
-        $port = isset($options['port']) ? $options['port'] : $this->port;
-        $dbname = isset($options['dbname']) ? $options['dbname'] : $this->dbname;
-        $user = isset($options['user']) ? $options['user'] : $this->user;
-        $pass = isset($options['pass']) ? $options['pass'] : $this->pass;
-        $errorMode = isset($options['errorMode']) ? $options['errorMode'] : $this->errorMode;
-        $charset = isset($options['charset']) ? $options['charset'] : $this->charset;
-        $connectionOptions = [];
-        if (isset($options['persistent'])) {
-            $connectionOptions[\PDO::ATTR_PERSISTENT] = $options['persistent'];
-        }
-        $dsn = 'mysql:host='.$host.';port='.$port.';dbname='.$dbname;
-        try {
-            $db = new \PDO($dsn, $user, $pass, $connectionOptions);
-            $db->setAttribute(\PDO::ATTR_ERRMODE, $errorMode);
-            $db->exec("set names {$charset}");
-        } catch (\PDOException $e) {
-            trigger_error('DataBase error: ' . $e->getMessage(), E_USER_ERROR);
-        }
-        $this->pdo = $db;
-    }
+	/**
+	 * @var string|null $dbname The database name.
+	 */
+	private ?string $dbname = null;
 
-    /**
-     * PDO prepare.
-     *
-     * @param string $query
-     *
-     * @return \PDOChainer\PDOChainer
-     */
-    public function prepare($query) {
-        $this->pdoStatement = $this->pdo->prepare($query);
-        return $this;
-    }
+	/**
+	 * @var string $user The database username.
+	 */
+	private string $user = 'root';
 
-    /**
-     * PDO bindValue.
-     *
-     * @param string $name
-     * @param string  $value
-     * @param int $type
-     *
-     * @return \PDOChainer\PDOChainer
-     */
-    public function bindValue($name, $value, $type = \PDO::PARAM_STR) {
-        $this->pdoStatement->bindValue($name, $value, $type);
-        return $this;
-    }
+	/**
+	 * @var string $pass The database password.
+	 */
+	private string $pass = '';
 
-    /**
-     * PDO bindValues for array of values.
-     *
-     * @param array $binds
-     * Array (
-     *   array(':id', 2, \PDO::PARAM_INT),
-     *   array(':name', 'James', \PDO::PARAM_STR),
-     *   ...
-     * )
-     *
-     * @return \PDOChainer\PDOChainer
-     */
-    public function bindValues(array $binds) {
-        foreach($binds as $valuesArray) {
-            $this->bindValue($valuesArray[0], $valuesArray[1], (isset($valuesArray[2]) ? $valuesArray[2] : \PDO::PARAM_STR));
-        }
-        return $this;
-    }
+	/**
+	 * @var int $errorMode The PDO error mode.
+	 */
+	private int $errorMode = \PDO::ERRMODE_WARNING;
 
-    /**
-     * PDO execute.
-     *
-     * @return \PDOChainer\PDOChainer
-     */
-    public function execute() {
-        try {
-            $this->pdoStatement->execute();
-        } catch (\PDOException $e) {
-            trigger_error('DataBase error: ' . $e->getMessage(), E_USER_ERROR);
-        }
-        return $this;
-    }
+	/**
+	 * @var string $charset The character set.
+	 */
+	private string $charset = 'utf8';
 
-    /**
-     * PDO fetch.
-     *
-     * @param int $type
-     *
-     * @return array|false
-     */
-    public function fetch($type = \PDO::FETCH_ASSOC) {
-        return ($this->pdoStatement) ? $this->pdoStatement->fetch($type) : false;
-    }
+	/**
+	 * @var \PDO|null $pdo The PDO instance.
+	 */
+	private ?\PDO $pdo = null;
 
-    /**
-     * PDO fetchAll.
-     *
-     * @param int $type
-     *
-     * @return array|false
-     */
-    public function fetchAll($type = \PDO::FETCH_ASSOC) {
-        return ($this->pdoStatement) ? $this->pdoStatement->fetchAll($type) : false;
-    }
+	/**
+	 * @var \PDOStatement|null $pdoStatement The PDOStatement instance.
+	 */
+	private ?\PDOStatement $pdoStatement = null;
 
-    /**
-     * PDO query.
-     *
-     * @param string $query
-     *
-     * @return \PDOChainer\PDOChainer
-     */
-    public function query($query) {
-        try {
-            $this->pdoStatement = $this->pdo->query($query);
-        } catch (\PDOException $e) {
-            trigger_error('DataBase error: ' . $e->getMessage(), E_USER_ERROR);
-        }
-        return $this;
-    }
+	/**
+	 * Main constructor.
+	 *
+	 * @param array $options Optional database connection options.
+	 */
+	public function __construct(array $options = [])
+	{
+		$this->host = $options['host'] ?? $this->host;
+		$this->port = $options['port'] ?? $this->port;
+		$this->dbname = $options['dbname'] ?? $this->dbname;
+		$this->user = $options['user'] ?? $this->user;
+		$this->pass = $options['pass'] ?? $this->pass;
+		$this->errorMode = $options['errorMode'] ?? $this->errorMode;
+		$this->charset = $options['charset'] ?? $this->charset;
 
-    /**
-     * PDO lastInsertId.
-     *
-     * @return int|false Last inserted ID
-     */
-    public function lastInsertId() {
-        return $this->pdo->lastInsertId();
-    }
+		$connectionOptions = [];
+		if (isset($options['persistent'])) {
+			$connectionOptions[\PDO::ATTR_PERSISTENT] = $options['persistent'];
+		}
 
-    /**
-     * PDO rowCount.
-     *
-     * @return int|false
-     */
-    public function rowCount() {
-        return ($this->pdoStatement) ? $this->pdoStatement->rowCount() : false;
-    }
+		$dsn = "mysql:host={$this->host};port={$this->port};dbname={$this->dbname}";
+		try {
+			$this->pdo = new \PDO($dsn, $this->user, $this->pass, $connectionOptions);
+			$this->pdo->setAttribute(\PDO::ATTR_ERRMODE, $this->errorMode);
+			$this->pdo->exec("SET NAMES {$this->charset}");
+		} catch (\PDOException $e) {
+			trigger_error('Database error: ' . $e->getMessage(), E_USER_ERROR);
+		}
+	}
+
+	/**
+	 * Prepares an SQL query.
+	 *
+	 * @param string $query The SQL query.
+	 *
+	 * @return \PDOChainer\PDOChainer
+	 */
+	public function prepare(string $query): self
+	{
+		$this->pdoStatement = $this->pdo?->prepare($query);
+		return $this;
+	}
+
+	/**
+	 * Binds a value to a parameter in the prepared statement.
+	 *
+	 * @param string $name The parameter name.
+	 * @param mixed $value The value to bind.
+	 * @param int $type The PDO parameter type.
+	 *
+	 * @return \PDOChainer\PDOChainer
+	 */
+	public function bindValue(string $name, mixed $value, int $type = \PDO::PARAM_STR): self
+	{
+		$this->pdoStatement?->bindValue($name, $value, $type);
+		return $this;
+	}
+
+	/**
+	 * Binds multiple values to parameters in the prepared statement.
+	 *
+	 * @param array $binds Array of values to bind, in the format:
+	 * [
+	 *   [':id', 2, \PDO::PARAM_INT],
+	 *   [':name', 'James', \PDO::PARAM_STR],
+	 * ]
+	 *
+	 * @return \PDOChainer\PDOChainer
+	 */
+	public function bindValues(array $binds): self
+	{
+		foreach ($binds as $valuesArray) {
+			$this->bindValue($valuesArray[0], $valuesArray[1], $valuesArray[2] ?? \PDO::PARAM_STR);
+		}
+		return $this;
+	}
+
+	/**
+	 * Executes the prepared statement.
+	 *
+	 * @return \PDOChainer\PDOChainer
+	 */
+	public function execute(): self
+	{
+		try {
+			$this->pdoStatement?->execute();
+		} catch (\PDOException $e) {
+			trigger_error('Database error: ' . $e->getMessage(), E_USER_ERROR);
+		}
+		return $this;
+	}
+
+	/**
+	 * Fetches a single row from the result set.
+	 *
+	 * @param int $type The fetch mode.
+	 *
+	 * @return array|false The fetched row or false on failure.
+	 */
+	public function fetch(int $type = \PDO::FETCH_ASSOC): array|false
+	{
+		return $this->pdoStatement?->fetch($type) ?: false;
+	}
+
+	/**
+	 * Fetches all rows from the result set.
+	 *
+	 * @param int $type The fetch mode.
+	 *
+	 * @return array|false The fetched rows or false on failure.
+	 */
+	public function fetchAll(int $type = \PDO::FETCH_ASSOC): array|false
+	{
+		return $this->pdoStatement?->fetchAll($type) ?: false;
+	}
+
+	/**
+	 * Executes a SQL query.
+	 *
+	 * @param string $query The SQL query to execute.
+	 *
+	 * @return \PDOChainer\PDOChainer
+	 */
+	public function query(string $query): self
+	{
+		try {
+			$this->pdoStatement = $this->pdo?->query($query);
+		} catch (\PDOException $e) {
+			trigger_error('Database error: ' . $e->getMessage(), E_USER_ERROR);
+		}
+		return $this;
+	}
+
+	/**
+	 * Returns the ID of the last inserted row.
+	 *
+	 * @return int|false The last inserted ID or false on failure.
+	 */
+	public function lastInsertId(): int|false
+	{
+		return $this->pdo?->lastInsertId() ?: false;
+	}
+
+	/**
+	 * Returns the number of rows affected by the last SQL statement.
+	 *
+	 * @return int|false The number of affected rows or false on failure.
+	 */
+	public function rowCount(): int|false
+	{
+		return $this->pdoStatement?->rowCount() ?: false;
+	}
 }
